@@ -11,7 +11,6 @@ import org.apache.storm.generated.AuthorizationException;
 import org.apache.storm.generated.InvalidTopologyException;
 import org.apache.storm.generated.NotAliveException;
 import org.apache.storm.topology.TopologyBuilder;
-import org.apache.storm.tuple.Fields;
 
 /**
  * @author: cj
@@ -26,15 +25,18 @@ public class TopologyMain {
         builder.setSpout("word-reader",new WordReader());
         builder.setBolt("word-normalizer", new WordNormalizer())
                 .shuffleGrouping("word-reader");
-        builder.setBolt("word-counter", new WordCounter(),1)
-                .fieldsGrouping("word-normalizer", new Fields("word"));
+        //多个线程之间分组的控制
+//        builder.setBolt("word-counter", new WordCounter(),2)
+//                .fieldsGrouping("word-normalizer", new Fields("word"));
+        builder.setBolt("word-counter",new WordCounter(),2)
+                    .shuffleGrouping("word-normalizer");
 
         //Configuration
         Config conf = new Config();
         conf.put("wordsFile", "wordsFile.txt");
         conf.setDebug(true);
         //Topology run
-//        conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 10);
+        conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);
 
 
         if (args != null && args.length > 0) {
